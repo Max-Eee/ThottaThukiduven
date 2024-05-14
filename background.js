@@ -464,27 +464,24 @@ chrome.action.onClicked.addListener((tab) => {
     }
 });
 
-
 async function queryOpenAI(text, isMCQ = false) {
-    const API_URL = 'https://thottathukiduven.vercel.app/api/proxy';
-    const API_KEY = 'part-of-nwo-schematics'; 
+    const API_URL = 'https://proxy-eight-xi.vercel.app/api/text';
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    const body = {
+        prompt: text
+    };
+    
     if (isMCQ) {
-        text += "\nThis is a MCQ question, Just give the option number and the correct answer option alone. No need any explanation. The output should be in this format : <option no.>. <answer option>. If you think the question is ot an mcq, just only say `Not an MCQ`.";
+        body.prompt += "\nThis is a MCQ question, Just give the option number and the correct answer option alone. No need any explanation. The output should be in this format : <option no.>. <answer option>. If you think the question is not an mcq, just only say `Not an MCQ`.";
     }
+
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gpt-4-1106-preview',
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." },
-                    { role: "user", content: text }
-                ]
-            })
+            headers: headers,
+            body: JSON.stringify(body)
         });
 
         if (!response.ok) {
@@ -493,13 +490,14 @@ async function queryOpenAI(text, isMCQ = false) {
             return null;
         }
 
-        const data = await response.json();
-        return data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content.trim();
+        const responseData = await response.json();
+        return responseData.text;
     } catch (error) {
-        console.error("Exception while querying OpenAI:", error);
+        console.error("Error querying OpenAI:", error);
         return null;
     }
 }
+
 
 function copyToClipboard(text) {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
